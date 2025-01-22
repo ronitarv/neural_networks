@@ -33,7 +33,7 @@ num_heads = 1
 tokenize = False
 
 if tokenize:
-  with open("neural_networks/transformers/decoder_only_chatbot/train.csv", "r") as file:
+  with open("neural_networks/transformers/decoder_only/train.csv", "r") as file:
     data = file.readlines()
   data = list(filter(lambda x: x != "\n", data))
   print("start")
@@ -45,7 +45,7 @@ if tokenize:
 
 print("loading dataset...")
 
-with open("neural_networks/transformers/decoder_only_chatbot/tiny_stories_dataset_test", "rb") as fp:
+with open("neural_networks/transformers/decoder_only/tiny_stories_dataset_test", "rb") as fp:
   x_train = pickle.load(fp)
 
 x_train = list(map(lambda x: np.array(x), x_train))
