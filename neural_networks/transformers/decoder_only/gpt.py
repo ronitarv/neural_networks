@@ -20,15 +20,15 @@ import pickle
 # 784*16 = 12544
 # 784*16+16*16 = 12800
 
-num_hidden_neurons = 20
+#num_hidden_neurons = 20
 batch_size = 2
-lr = 0.00001
+lr = 0.001
 wd = 0.00001 # 0.0000001 # 0.000001
 momentum = 0.7
 epochs = 20000
-dimensions = 5
+dimensions = 50
 clipnorm = 10.0
-num_heads = 1
+num_heads = 5
 
 tokenize = False
 
