@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit
-from numpy import float64 as float32
+from numpy import float32 as float32
 import math
 
 #@njit()

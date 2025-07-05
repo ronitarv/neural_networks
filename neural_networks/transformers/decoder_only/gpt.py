@@ -2,7 +2,7 @@
 import numpy as np
 from numba import njit
 import math
-from numpy import float64 as float32
+from numpy import float32 as float32
 #from playsound import playsound
 import math
 # from components.mlp import Mlp
@@ -15,20 +15,22 @@ from neural_networks.components.network import Network
 from neural_networks.components.attention import softmax_derivative
 from nltk.tokenize import word_tokenize
 import pickle
+import nltk
+nltk.download('punkt_tab')
 
 # 28*28 = 784
 # 784*16 = 12544
 # 784*16+16*16 = 12800
 
 #num_hidden_neurons = 20
-batch_size = 2
-lr = 0.001
+batch_size = 1
+lr = 0.0001
 wd = 0.00001 # 0.0000001 # 0.000001
 momentum = 0.7
 epochs = 20000
-dimensions = 50
+dimensions = 3
 clipnorm = 10.0
-num_heads = 5
+num_heads = 1
 
 tokenize = False
 
@@ -51,23 +53,52 @@ with open("neural_networks/transformers/decoder_only/tiny_stories_dataset_test",
 x_train = list(map(lambda x: np.array(x), x_train))
 x_train = list(filter(lambda x: len(x)>1, x_train))
 #x_train = x_train[:1000]
-x_train[0] = x_train[0][1:5]
+x_train[0] = np.array(word_tokenize("Is there anything I can help with?"))#x_train[0][1:5]
 #x_train.append(x_train[0]) # test
 
 dictionary = list(set([y for x in x_train for y in x]))
 dictionary_size = len(dictionary)
 
+# x_train = [
+#     "How are you?",
+#     "Good morning",
+#     "Good evening",
+#     "Nice to meet you",
+#     "What's up?",
+#     "How's your day going?",
+#     "Greetings!",
+#     "Good afternoon",
+#     "How can I assist you?",
+#     "Pleasure to see you",
+#     "Is there anything I can help with?"
+# ]
+
 print("dataset loaded")
 
 
+# layers = [
+#   Mlp(layers=np.array([dictionary_size, dimensions]), lr=lr, weight_decay=wd, momentum=momentum, has_residual_connections=False, clipnorm=clipnorm),
+#   PositionalEncoding(dimensions=dimensions),
+#   Attention(num_heads=num_heads, dimensions=dimensions, lr=lr, has_residual_connections=True, clipnorm=clipnorm),
+#   LayerNormalization(dimensions, lr, clipnorm=clipnorm),
+#   #Mlp(layers=(dimensions, int(dimensions/2), dimensions), lr=lr, has_residual_connections=True),
+#   #LayerNormalization(),
+#   Mlp(layers=np.array([dimensions, dictionary_size]), lr=lr, weight_decay=wd, momentum=momentum, has_residual_connections=False, clipnorm=clipnorm)
+# ]
+
 layers = [
-  Mlp(shape=np.array([dictionary_size, dimensions]), lr=lr, weight_decay=wd, momentum=momentum, has_residual_connections=False, clipnorm=clipnorm),
+  Linear(layers=np.array([dictionary_size, dimensions]), lr=lr, weight_decay=wd, momentum=momentum, has_residual_connections=False, clipnorm=clipnorm),
   PositionalEncoding(dimensions=dimensions),
-  Attention(num_heads=num_heads, dimensions=dimensions, lr=lr, has_residual_connections=True, clipnorm=clipnorm),
+  "residual_start",
   LayerNormalization(dimensions, lr, clipnorm=clipnorm),
-  #Mlp(layers=(dimensions, int(dimensions/2), dimensions), lr=lr, has_residual_connections=True),
-  #LayerNormalization(),
-  Mlp(shape=np.array([dimensions, dictionary_size]), lr=lr, weight_decay=wd, momentum=momentum, has_residual_connections=False, clipnorm=clipnorm)
+  Attention(num_heads=num_heads, dimensions=dimensions, lr=lr, has_residual_connections=False, clipnorm=clipnorm),
+  "residual_end",
+  "residual_start",
+  LayerNormalization(dimensions, lr, clipnorm=clipnorm),
+  Mlp(layers=(dimensions, dimensions), lr=lr),
+  "residual_end",
+  LayerNormalization(dimensions, lr, clipnorm=clipnorm),
+  Linear(layers=np.array([dimensions, dictionary_size]), lr=lr, weight_decay=wd, momentum=momentum, has_residual_connections=False, clipnorm=clipnorm)
 ]
 
 network = Network(layers=layers)

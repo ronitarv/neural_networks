@@ -115,7 +115,7 @@ def train_network(network: Network, x_train, y_train):
       
       #previous_weight_changes = [np.array(784*num_hidden_neurons*[0.0], dtype=float32), np.array(num_hidden_neurons**2*[0.0], dtype=float32), np.array(num_hidden_neurons*10*[0.0], dtype=float32)]
       output = network.forward(imgs[0].astype(float32))
-      answer = np.array([np.eye(1, 10, k=i)[0] for i in imgs[1]])
+      answer = np.array([np.eye(1, 10, k=i)[0] for i in imgs[1]], dtype=float32)
       error_terms = -2*(answer-output)
       #for img in zip(outputs, imgs[1]):
       #   output = img[0]
@@ -177,7 +177,7 @@ def train_network(network: Network, x_train, y_train):
 def test_network(network: Network):
    correct = 0
    lap = 0
-   outputs = network.forward(x_test)
+   outputs = network.forward(x_test.astype(float32))
    for img in zip(outputs, y_test):
       lap += 1
       output = img[0]

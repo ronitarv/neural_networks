@@ -5,11 +5,18 @@ import numpy as np
 class Network:
   def __init__(self, layers):
     self.layers = layers
-    self.inputs = None
+    self.residual = None
   def forward(self, inputs):
     next_inputs = inputs
     for layer in self.layers:
       #start = time.time()
+      if layer == "residual_start":
+        self.residual = next_inputs
+        continue
+      elif layer == "residual_end":
+        next_inputs += self.residual
+        self.residual = None
+        continue
       next_inputs = layer.forward(next_inputs)
       #print(f'forward - {layer}: {time.time()-start}')
       #print("forward:", layer, time.time()-start)
@@ -21,6 +28,8 @@ class Network:
     next_error_terms = path_error_terms
     for layer in self.layers[::-1]:
       #start = time.time()
+      if layer == "residual_start" or layer == "residual_end":
+        continue
       next_error_terms = layer.backpropagate(next_error_terms)
       #print(f'backpropagate - {layer}: {time.time()-start}')
       #print("backpropagate:", layer, np.max(next_error_terms), time.time()-start)

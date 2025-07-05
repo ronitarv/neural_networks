@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import float64 as float32
+from numpy import float32 as float32
 import torch
 import torch.nn as nn
 

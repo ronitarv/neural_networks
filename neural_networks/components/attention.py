@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit, cuda
-from numpy import float64 as float32
+from numpy import float32 as float32
 import math
 from neural_networks.components.mlp import Mlp
 from neural_networks.components.linear import Linear
@@ -41,18 +41,18 @@ def softmax_derivative(softmax_values, softmax_error_terms):
 def numba_init_sentence(dimensions, embeddings, query_weights, key_weights, value_weights):
    queries = []
    for emb in embeddings:
-      queries.append(np.array([sum(emb*query_weights[i::dimensions]) for i in range(dimensions)]))
+      queries.append(np.array([sum(emb*query_weights[i::dimensions]) for i in range(dimensions)], dtype=float32))
       #queries.append(np.array([sum(emb*query_weights[i*dimensions: (i+1)*dimensions]) for i in range(dimensions)]))
    
    
    keys = []
    for emb in embeddings:
-      keys.append(np.array([sum(emb*key_weights[i::dimensions]) for i in range(dimensions)]))
+      keys.append(np.array([sum(emb*key_weights[i::dimensions]) for i in range(dimensions)], dtype=float32))
       #keys.append(np.array([sum(emb*key_weights[i*dimensions: (i+1)*dimensions]) for i in range(dimensions)]))
    
    values = []
    for emb in embeddings:
-      values.append(np.array([sum(emb*value_weights[i::dimensions]) for i in range(dimensions)]))
+      values.append(np.array([sum(emb*value_weights[i::dimensions]) for i in range(dimensions)], dtype=float32))
       #values.append(np.array([sum(emb*value_weights[i*dimensions: (i+1)*dimensions]) for i in range(dimensions)]))
 
    # if np.max(queries) > 1000 or np.max(keys) > 1000 or np.max(values) > 1000:
@@ -67,10 +67,10 @@ def numba_forward(queries, keys, values, num_embeddings, dimensions):
    softmax_values = []
    outputs = []
    for train_index in range(num_embeddings):
-      softmax_values.append(softmax(np.array([sum(queries[train_index]*key) for key in keys[0:train_index+1]])/np.sqrt(dimensions)))
+      softmax_values.append(softmax(np.array([sum(queries[train_index]*key) for key in keys[0:train_index+1]],dtype=float32)/np.sqrt(dimensions)).astype(float32))
       outputs.append(np.sum([z[0]*z[1] for z in zip(softmax_values[-1], values[0:train_index+1])],axis=0))
    
-   return np.array(outputs), softmax_values
+   return np.array(outputs, dtype=float32), softmax_values
 
 def forward_softmax(query, keys):
    return softmax((query*keys).sum(axis=1))
@@ -319,9 +319,9 @@ class Attention:
       self.embeddings = embeddings
       head_outputs = np.array([head.forward(queries[:, i*self.sections:(i+1)*self.sections], 
                                             keys[:, i*self.sections:(i+1)*self.sections], 
-                                            values[:, i*self.sections:(i+1)*self.sections]) for i, head in enumerate(self.heads)])
+                                            values[:, i*self.sections:(i+1)*self.sections]) for i, head in enumerate(self.heads)],dtype=float32)
       #outputs = head_outputs[0]
-      outputs = self.linear.forward(np.array([head_outputs[:,i].ravel() for i in range(len(embeddings))])) if self.num_heads > 1 else head_outputs[0]
+      outputs = self.linear.forward(np.array([head_outputs[:,i].ravel() for i in range(len(embeddings))],dtype=float32)) if self.num_heads > 1 else head_outputs[0]
       return outputs + embeddings if self.has_residual_connections else outputs
    
    def backpropagate(self, path_error_terms):
